@@ -1,291 +1,322 @@
 <!DOCTYPE html>
 <html lang="pt-br">
+
 <head>
+
 <meta charset="UTF-8">
-<title>Laboratório de Probabilidade</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Laboratório Científico de Probabilidade</title>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
 
 body{
-background:#020814;
-color:#ffffff;
+background:#020617;
+color:white;
 font-family:Arial;
 text-align:center;
+padding:20px;
 }
 
 h1{
 color:#ffffff;
-letter-spacing:2px;
 }
 
-#painel{
+.container{
 display:flex;
 justify-content:center;
-gap:40px;
-margin-top:20px;
+flex-wrap:wrap;
+gap:20px;
+margin-bottom:20px;
 }
 
-.classe{
-border:2px solid #7a0000;
-padding:12px;
+.card{
+border:2px solid red;
+padding:15px;
 width:160px;
-background:#030b1f;
-box-shadow:0 0 10px #001a44;
-}
-
-.classe h3{
-color:#ff1a1a;
-}
-
-#stats{
-margin-top:25px;
-font-size:18px;
-color:#ffffff;
-}
-
-#log{
-margin-top:20px;
-height:200px;
-overflow:auto;
-background:#020814;
-border:1px solid #001a44;
-padding:10px;
-font-size:13px;
-}
-
-button{
-margin:8px;
-padding:10px 20px;
-font-size:16px;
-cursor:pointer;
-background:#7a0000;
-color:#ffffff;
-border:none;
-transition:0.2s;
-}
-
-button:hover{
-background:#b30000;
+background:#000814;
 }
 
 input{
-padding:6px;
+padding:10px;
 font-size:16px;
-width:120px;
 text-align:center;
-background:#030b1f;
-border:1px solid #7a0000;
-color:#ffffff;
+width:120px;
+margin:10px;
+}
+
+button{
+padding:12px 20px;
+background:red;
+color:white;
+border:none;
+margin:10px;
+font-size:16px;
+cursor:pointer;
+}
+
+.stats{
+margin-top:20px;
+}
+
+canvas{
+margin-top:30px;
 }
 
 </style>
+
 </head>
 
 <body>
 
-<h1>Laboratório de Probabilidade</h1>
+<h1>Laboratório Científico de Probabilidade</h1>
 
-<div id="painel">
+<div class="container">
 
-<div class="classe">
+<div class="card">
 <h3>Tank</h3>
-Número: 15<br>
-Vida: 180<br>
-Ataque: 6
+Estratégia: 15
 </div>
 
-<div class="classe">
+<div class="card">
 <h3>Guerreiro</h3>
-Número: 17<br>
-Vida: 120<br>
-Ataque: 10
+Estratégia: 17
 </div>
 
-<div class="classe">
+<div class="card">
 <h3>Berserk</h3>
-Número: 19<br>
-Vida: 90<br>
-Ataque: 14
+Estratégia: 19
 </div>
 
 </div>
+
+Simulações
 
 <br>
 
-Quantidade de batalhas:
+<input id="batalhas" value="10000">
 
-<br><br>
+<br>
 
-<input id="quantidade" value="10000">
+<button onclick="simular()">Simular</button>
+<button onclick="reset()">Resetar</button>
 
-<br><br>
+<div class="stats">
 
-<button onclick="iniciar()">Simular</button>
-<button onclick="resetar()">Resetar</button>
+<p id="tank"></p>
+<p id="guerreiro"></p>
+<p id="berserk"></p>
 
-<div id="stats">
-
-Batalhas: <span id="batalhas">0</span><br><br>
-
-Vitórias Tank: <span id="tank">0</span><br>
-Vitórias Guerreiro: <span id="guerreiro">0</span><br>
-Vitórias Berserk: <span id="berserk">0</span>
+<p id="bustTank"></p>
+<p id="bustGuerreiro"></p>
+<p id="bustBerserk"></p>
 
 </div>
 
-<div id="log"></div>
+<canvas id="grafico"></canvas>
 
 <script>
 
-const classes={
+let chart
 
-tank:{
-numero:15,
-vida:180,
-ataque:6
-},
+let tankWins=0
+let guerreiroWins=0
+let berserkWins=0
 
-guerreiro:{
-numero:17,
-vida:120,
-ataque:10
-},
+let bustTank=0
+let bustGuerreiro=0
+let bustBerserk=0
 
-berserk:{
-numero:19,
-vida:90,
-ataque:14
+function criarBaralho(){
+
+let cartas=[]
+let valores=[1,2,3,4,5,6,7,8,9,10,10,10,10]
+
+for(let n=0;n<4;n++){
+for(let v of valores){
+cartas.push(v)
+}
+}
+
+return cartas
+}
+
+function embaralhar(baralho){
+
+for(let i=baralho.length-1;i>0;i--){
+
+let j=Math.floor(Math.random()*(i+1))
+
+let temp=baralho[i]
+baralho[i]=baralho[j]
+baralho[j]=temp
+
 }
 
 }
 
-let wins={
-tank:0,
-guerreiro:0,
-berserk:0
-}
-
-let batalhas=0
-
-function rand(min,max){
-return Math.floor(Math.random()*(max-min+1))+min
-}
-
-function blackjack(){
+function jogar(estrategia,baralho){
 
 let soma=0
 
-while(soma<17){
-soma+=rand(1,11)
+while(soma < estrategia){
+
+let carta=baralho.pop()
+
+soma+=carta
+
 }
 
 return soma
-}
-
-function ataque(classe){
-
-let base=blackjack()
-
-return base + classe.ataque + classe.numero
-}
-
-function batalha(a,b){
-
-let A=JSON.parse(JSON.stringify(classes[a]))
-let B=JSON.parse(JSON.stringify(classes[b]))
-
-while(A.vida>0 && B.vida>0){
-
-B.vida-=ataque(A)
-
-if(B.vida<=0) return a
-
-A.vida-=ataque(B)
 
 }
 
-return b
+function batalha(){
+
+let personagens=[
+{name:"tank",estrategia:15},
+{name:"guerreiro",estrategia:17},
+{name:"berserk",estrategia:19}
+]
+
+let a=personagens[Math.floor(Math.random()*3)]
+let b=personagens[Math.floor(Math.random()*3)]
+
+if(a==b) return
+
+let baralho=criarBaralho()
+
+embaralhar(baralho)
+
+let somaA=jogar(a.estrategia,baralho)
+let somaB=jogar(b.estrategia,baralho)
+
+if(somaA>21){
+if(a.name=="tank") bustTank++
+if(a.name=="guerreiro") bustGuerreiro++
+if(a.name=="berserk") bustBerserk++
+}
+
+if(somaB>21){
+if(b.name=="tank") bustTank++
+if(b.name=="guerreiro") bustGuerreiro++
+if(b.name=="berserk") bustBerserk++
+}
+
+if(somaA>21 && somaB>21) return
+
+if(somaA>21){
+
+if(b.name=="tank")tankWins++
+if(b.name=="guerreiro")guerreiroWins++
+if(b.name=="berserk")berserkWins++
+
+return
+}
+
+if(somaB>21){
+
+if(a.name=="tank")tankWins++
+if(a.name=="guerreiro")guerreiroWins++
+if(a.name=="berserk")berserkWins++
+
+return
+}
+
+let diffA=21-somaA
+let diffB=21-somaB
+
+if(diffA<diffB){
+
+if(a.name=="tank")tankWins++
+if(a.name=="guerreiro")guerreiroWins++
+if(a.name=="berserk")berserkWins++
+
+}else{
+
+if(b.name=="tank")tankWins++
+if(b.name=="guerreiro")guerreiroWins++
+if(b.name=="berserk")berserkWins++
 
 }
 
-function batalhaAleatoria(){
-
-const nomes=["tank","guerreiro","berserk"]
-
-let a=nomes[rand(0,2)]
-let b=nomes[rand(0,2)]
-
-while(a===b){
-b=nomes[rand(0,2)]
 }
 
-let vencedor=batalha(a,b)
+function simular(){
 
-wins[vencedor]++
+let total=parseInt(document.getElementById("batalhas").value)
 
-batalhas++
-
-if(batalhas%500==0){
-
-log(a+" vs "+b+" → "+vencedor)
-
+for(let i=0;i<total;i++){
+batalha()
 }
 
-}
+document.getElementById("tank").innerHTML=
+"Tank vitórias: "+tankWins
 
-function iniciar(){
+document.getElementById("guerreiro").innerHTML=
+"Guerreiro vitórias: "+guerreiroWins
 
-let quantidade=parseInt(document.getElementById("quantidade").value)
+document.getElementById("berserk").innerHTML=
+"Berserk vitórias: "+berserkWins
 
-for(let i=0;i<quantidade;i++){
+document.getElementById("bustTank").innerHTML=
+"Tank estourou: "+bustTank
 
-batalhaAleatoria()
+document.getElementById("bustGuerreiro").innerHTML=
+"Guerreiro estourou: "+bustGuerreiro
+
+document.getElementById("bustBerserk").innerHTML=
+"Berserk estourou: "+bustBerserk
+
+criarGrafico()
 
 }
 
-atualizar()
+function criarGrafico(){
 
-log("Simulação finalizada")
+const ctx=document.getElementById("grafico")
+
+if(chart) chart.destroy()
+
+chart=new Chart(ctx,{
+type:'bar',
+data:{
+labels:['Tank','Guerreiro','Berserk'],
+datasets:[{
+label:'Vitórias',
+data:[tankWins,guerreiroWins,berserkWins]
+}]
+}
+})
 
 }
 
-function atualizar(){
+function reset(){
 
-document.getElementById("batalhas").innerText=batalhas
-document.getElementById("tank").innerText=wins.tank
-document.getElementById("guerreiro").innerText=wins.guerreiro
-document.getElementById("berserk").innerText=wins.berserk
+tankWins=0
+guerreiroWins=0
+berserkWins=0
 
-}
+bustTank=0
+bustGuerreiro=0
+bustBerserk=0
 
-function resetar(){
+document.getElementById("tank").innerHTML=""
+document.getElementById("guerreiro").innerHTML=""
+document.getElementById("berserk").innerHTML=""
 
-wins={
-tank:0,
-guerreiro:0,
-berserk:0
-}
+document.getElementById("bustTank").innerHTML=""
+document.getElementById("bustGuerreiro").innerHTML=""
+document.getElementById("bustBerserk").innerHTML=""
 
-batalhas=0
-
-document.getElementById("log").innerHTML=""
-
-atualizar()
-
-}
-
-function log(txt){
-
-let l=document.getElementById("log")
-
-let p=document.createElement("div")
-p.innerText=txt
-
-l.prepend(p)
+if(chart) chart.destroy()
 
 }
 
 </script>
 
 </body>
-</html>
+
+  </html>
