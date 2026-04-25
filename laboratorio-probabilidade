@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<title>Laboratório de Probabilidade</title>
+
+<style>
+
+body{
+background:#020814;
+color:#ffffff;
+font-family:Arial;
+text-align:center;
+}
+
+h1{
+color:#ffffff;
+letter-spacing:2px;
+}
+
+#painel{
+display:flex;
+justify-content:center;
+gap:40px;
+margin-top:20px;
+}
+
+.classe{
+border:2px solid #7a0000;
+padding:12px;
+width:160px;
+background:#030b1f;
+box-shadow:0 0 10px #001a44;
+}
+
+.classe h3{
+color:#ff1a1a;
+}
+
+#stats{
+margin-top:25px;
+font-size:18px;
+color:#ffffff;
+}
+
+#log{
+margin-top:20px;
+height:200px;
+overflow:auto;
+background:#020814;
+border:1px solid #001a44;
+padding:10px;
+font-size:13px;
+}
+
+button{
+margin:8px;
+padding:10px 20px;
+font-size:16px;
+cursor:pointer;
+background:#7a0000;
+color:#ffffff;
+border:none;
+transition:0.2s;
+}
+
+button:hover{
+background:#b30000;
+}
+
+input{
+padding:6px;
+font-size:16px;
+width:120px;
+text-align:center;
+background:#030b1f;
+border:1px solid #7a0000;
+color:#ffffff;
+}
+
+</style>
+</head>
+
+<body>
+
+<h1>Laboratório de Probabilidade</h1>
+
+<div id="painel">
+
+<div class="classe">
+<h3>Tank</h3>
+Número: 15<br>
+Vida: 180<br>
+Ataque: 6
+</div>
+
+<div class="classe">
+<h3>Guerreiro</h3>
+Número: 17<br>
+Vida: 120<br>
+Ataque: 10
+</div>
+
+<div class="classe">
+<h3>Berserk</h3>
+Número: 19<br>
+Vida: 90<br>
+Ataque: 14
+</div>
+
+</div>
+
+<br>
+
+Quantidade de batalhas:
+
+<br><br>
+
+<input id="quantidade" value="10000">
+
+<br><br>
+
+<button onclick="iniciar()">Simular</button>
+<button onclick="resetar()">Resetar</button>
+
+<div id="stats">
+
+Batalhas: <span id="batalhas">0</span><br><br>
+
+Vitórias Tank: <span id="tank">0</span><br>
+Vitórias Guerreiro: <span id="guerreiro">0</span><br>
+Vitórias Berserk: <span id="berserk">0</span>
+
+</div>
+
+<div id="log"></div>
+
+<script>
+
+const classes={
+
+tank:{
+numero:15,
+vida:180,
+ataque:6
+},
+
+guerreiro:{
+numero:17,
+vida:120,
+ataque:10
+},
+
+berserk:{
+numero:19,
+vida:90,
+ataque:14
+}
+
+}
+
+let wins={
+tank:0,
+guerreiro:0,
+berserk:0
+}
+
+let batalhas=0
+
+function rand(min,max){
+return Math.floor(Math.random()*(max-min+1))+min
+}
+
+function blackjack(){
+
+let soma=0
+
+while(soma<17){
+soma+=rand(1,11)
+}
+
+return soma
+}
+
+function ataque(classe){
+
+let base=blackjack()
+
+return base + classe.ataque + classe.numero
+}
+
+function batalha(a,b){
+
+let A=JSON.parse(JSON.stringify(classes[a]))
+let B=JSON.parse(JSON.stringify(classes[b]))
+
+while(A.vida>0 && B.vida>0){
+
+B.vida-=ataque(A)
+
+if(B.vida<=0) return a
+
+A.vida-=ataque(B)
+
+}
+
+return b
+
+}
+
+function batalhaAleatoria(){
+
+const nomes=["tank","guerreiro","berserk"]
+
+let a=nomes[rand(0,2)]
+let b=nomes[rand(0,2)]
+
+while(a===b){
+b=nomes[rand(0,2)]
+}
+
+let vencedor=batalha(a,b)
+
+wins[vencedor]++
+
+batalhas++
+
+if(batalhas%500==0){
+
+log(a+" vs "+b+" → "+vencedor)
+
+}
+
+}
+
+function iniciar(){
+
+let quantidade=parseInt(document.getElementById("quantidade").value)
+
+for(let i=0;i<quantidade;i++){
+
+batalhaAleatoria()
+
+}
+
+atualizar()
+
+log("Simulação finalizada")
+
+}
+
+function atualizar(){
+
+document.getElementById("batalhas").innerText=batalhas
+document.getElementById("tank").innerText=wins.tank
+document.getElementById("guerreiro").innerText=wins.guerreiro
+document.getElementById("berserk").innerText=wins.berserk
+
+}
+
+function resetar(){
+
+wins={
+tank:0,
+guerreiro:0,
+berserk:0
+}
+
+batalhas=0
+
+document.getElementById("log").innerHTML=""
+
+atualizar()
+
+}
+
+function log(txt){
+
+let l=document.getElementById("log")
+
+let p=document.createElement("div")
+p.innerText=txt
+
+l.prepend(p)
+
+}
+
+</script>
+
+</body>
+</html>
